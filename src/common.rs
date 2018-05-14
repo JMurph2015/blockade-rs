@@ -64,6 +64,7 @@ impl Stringify for BlockadeNetStatus {
     }
     fn from_str(val: &str) -> Self {
         return match val {
+            "NORMAL" => BlockadeNetStatus::Fast,
             "FAST" => BlockadeNetStatus::Fast,
             "SLOW" => BlockadeNetStatus::Slow,
             "DUPLICATE" => BlockadeNetStatus::Duplicate,
