@@ -227,7 +227,7 @@ impl Default for BlockadeContainerState {
     fn default() -> Self {
         return BlockadeContainerState {
             container_id: String::new(),
-            device: String::new(),
+            device: None,
             ip_address: Ipv4Addr::new(127, 0, 0, 2),
             name: String::new(),
             network_state: BlockadeNetStatus::Unknown,
