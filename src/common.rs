@@ -149,7 +149,7 @@ pub struct BlockadeState {
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeContainerState {
     pub container_id: String,
-    pub device: String,
+    pub device: Option<String>,
     pub ip_address: Ipv4Addr,
     pub name: String,
     pub network_state: BlockadeNetStatus,
