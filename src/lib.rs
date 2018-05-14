@@ -5,8 +5,8 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-pub mod blockade;
 pub mod common;
-pub use blockade::BlockadeHandler;
+mod blockade;
+pub use blockade::*;
 #[cfg(test)]
 mod tests;
