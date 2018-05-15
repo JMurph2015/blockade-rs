@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
+use std::fmt;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::de::{self, Visitor};
 use serde_aux::prelude::*;
 
 pub trait Stringify {
@@ -9,7 +11,7 @@ pub trait Stringify {
     fn from_str(val: &str) -> Self;
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BlockadeCommand {
     Start,
     Stop,
@@ -38,7 +40,7 @@ impl Stringify for BlockadeCommand {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BlockadeNetStatus {
     Fast,
     Slow,
@@ -71,7 +73,7 @@ impl Stringify for BlockadeNetStatus {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BlockadeContainerStatus {
     Up,
     Down,
@@ -297,3 +299,38 @@ macro_rules! serialize_impl {
 serialize_impl!(BlockadeCommand);
 serialize_impl!(BlockadeNetStatus);
 serialize_impl!(BlockadeContainerStatus);
+
+macro_rules! deserialize_impl {
+    ($($t:ty)*, $s:ident) => ($(
+        struct $s;
+
+        impl<'de> Visitor<'de> for $s {
+            type Value = $t;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                let val = String::from(stringify!($t));
+                formatter.write_str(&format!("A valid variant of {}", val))
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<$t, E>
+            where
+                E: de::Error,
+            {
+                Ok(Stringify::from_str(value))
+            }
+        }
+
+        impl<'de> Deserialize<'de> for $t {
+            fn deserialize<D>(deserializer: D) -> Result<$t, D::Error>
+            where
+                D: Deserializer<'de>
+            {
+                deserializer.deserialize_str($s)
+            }
+        }
+    )*)
+}
+
+deserialize_impl!(BlockadeCommand, BlockadeCommandVisitor);
+deserialize_impl!(BlockadeNetStatus, BlockadeNetStatusVisitor);
+deserialize_impl!(BlockadeContainerStatus, BlockadeContainerStatusVisitor);
