@@ -146,9 +146,14 @@ pub struct BlockadeState {
     pub containers: HashMap<String, BlockadeContainerState>,
 }
 
+fn none_resource() -> Option<String> {
+    return None;
+}
+
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeContainerState {
     pub container_id: String,
+    #[serde(default = "none_resource")]
     pub device: Option<String>,
     pub ip_address: Ipv4Addr,
     pub name: String,
