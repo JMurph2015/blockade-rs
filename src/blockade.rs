@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 use std::{error, fmt};
 
+use log;
+
 use serde_json;
 
 use reqwest;
 
 use rand::{seq, thread_rng};
 
-pub use common::*;
+use common::*;
 
 #[derive(Debug)]
 pub enum BlockadeError {
@@ -96,7 +98,11 @@ impl BlockadeHandler {
             let mut rng = thread_rng();
             let state = self.state.clone();
             let keys = state.get(name).unwrap().containers.keys();
-            let container = seq::sample_iter(&mut rng, keys, 1).unwrap().pop().unwrap().clone();
+            let container = seq::sample_iter(&mut rng, keys, 1)
+                .unwrap()
+                .pop()
+                .unwrap()
+                .clone();
             return Ok(container.into());
         } else if !self.state.contains_key(name) {
             return Err(BlockadeError::OtherError(String::from(
@@ -117,7 +123,7 @@ impl BlockadeHandler {
         restart: bool,
     ) -> Result<(), BlockadeError> {
         match self.execute_setup(name, config.clone()) {
-            Ok(_) => {},
+            Ok(_) => {}
             Err(e) => {
                 if restart {
                     match e {
@@ -126,7 +132,7 @@ impl BlockadeHandler {
                                 self.destroy_blockade(name)?;
                                 self.execute_setup(name, config.clone())?;
                             }
-                        },
+                        }
                         _ => {}
                     }
                 }
@@ -136,11 +142,7 @@ impl BlockadeHandler {
         return Ok(());
     }
 
-    pub fn start_container(
-        &mut self,
-        name: &str,
-        container: &str,
-    ) -> Result<(), BlockadeError> {
+    pub fn start_container(&mut self, name: &str, container: &str) -> Result<(), BlockadeError> {
         self.execute_command(name, BlockadeCommand::Start, vec![container.into()])?;
         self.execute_get_blockade(name)?;
         return Ok(());
@@ -154,11 +156,7 @@ impl BlockadeHandler {
     }
 
     /// Restart a container by blockade name and container name.
-    pub fn restart_container(
-        &mut self,
-        name: &str,
-        container: &str,
-    ) -> Result<(), BlockadeError> {
+    pub fn restart_container(&mut self, name: &str, container: &str) -> Result<(), BlockadeError> {
         self.execute_command(name, BlockadeCommand::Restart, vec![container.into()])?;
         self.execute_get_blockade(name)?;
         return Ok(());
@@ -239,11 +237,7 @@ impl BlockadeHandler {
         return Ok(());
     }
 
-    fn execute_setup(
-        &mut self,
-        name: &str,
-        config: BlockadeConfig,
-    ) -> Result<(), BlockadeError> {
+    fn execute_setup(&mut self, name: &str, config: BlockadeConfig) -> Result<(), BlockadeError> {
         self.config.insert(name.into(), config.clone());
 
         let json = serde_json::to_string_pretty(&config).expect("Failed to serialize config");
@@ -356,6 +350,7 @@ impl BlockadeHandler {
         println!("Sent get to server with status: {}", res.status());
 
         if res.status().is_success() {
+            info!("Raw response from server: {:?}", res.text()?);
             let v: Vec<String> = res.json()?;
             self.blockades = v;
             return Ok(());
@@ -372,6 +367,7 @@ impl BlockadeHandler {
         println!("Sent get to server with status: {}", res.status());
 
         if res.status().is_success() {
+            info!("Raw response from server: {:?}", res.text()?);
             let s: BlockadeState = res.json()?;
             self.state.insert(name.into(), s);
             return Ok(());

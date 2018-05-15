@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate log;
 extern crate rand;
 extern crate reqwest;
 extern crate serde;
@@ -5,8 +7,9 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 
-pub mod common;
 mod blockade;
+mod common;
 pub use blockade::*;
+pub use common::*;
 #[cfg(test)]
 mod tests;
