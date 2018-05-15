@@ -146,18 +146,26 @@ pub struct BlockadeState {
     pub containers: HashMap<String, BlockadeContainerState>,
 }
 
-fn none_resource() -> Option<String> {
+fn none_str_resource() -> Option<String> {
     return None;
+}
+fn none_u32_resource() -> Option<u32> {
+    return None;
+}
+fn ip_default_resource() -> Ipv4Addr {
+    return Ipv4Addr::new(0, 0, 0, 0);
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeContainerState {
     pub container_id: String,
-    #[serde(default = "none_resource")]
+    #[serde(default = "none_str_resource")]
     pub device: Option<String>,
+    #[serde(default = "ip_default_resource")]
     pub ip_address: Ipv4Addr,
     pub name: String,
     pub network_state: BlockadeNetStatus,
+    #[serde(default = "none_u32_resource")]
     pub partition: Option<u32>,
     pub status: BlockadeContainerStatus,
 }
