@@ -4,7 +4,6 @@ use std::fmt;
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{self, Visitor};
-use serde_aux::prelude::*;
 
 pub trait Stringify {
     fn to_str(&self) -> &str;
@@ -125,14 +124,12 @@ pub struct BlockadeConfig {
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeCommandArgs {
-    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub command: BlockadeCommand,
     pub container_names: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeNetArgs {
-    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub network_state: BlockadeNetStatus,
     pub container_names: Vec<String>,
 }
@@ -176,7 +173,6 @@ pub struct BlockadeContainerState {
     pub name: String,
 
     // present
-    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub network_state: BlockadeNetStatus,
 
     // present, sometimes null
@@ -184,7 +180,6 @@ pub struct BlockadeContainerState {
     pub partition: u32,
 
     // present
-    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub status: BlockadeContainerStatus,
 }
 
