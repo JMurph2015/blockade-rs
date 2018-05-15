@@ -149,7 +149,7 @@ fn none_str_resource() -> String {
 }
 
 fn none_u32_resource() -> u32 {
-    return 99;
+    return 0;
 }
 
 fn ip_default_resource() -> Ipv4Addr {
@@ -181,7 +181,7 @@ fn nullable_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
 where D: Deserializer<'de>
 {
     let opt = Option::deserialize(deserializer)?;
-    Ok(opt.unwrap_or(99))
+    Ok(opt.unwrap_or(0))
 }
 
 fn nullable_ip<'de, D>(deserializer: D) -> Result<Ipv4Addr, D::Error>
