@@ -136,6 +136,7 @@ impl BlockadeHandler {
                             if s == String::from("Blockade name already exists") {
                                 self.destroy_blockade(name)?;
                                 self.execute_setup(name, config.clone())?;
+                                return Ok(());
                             }
                         }
                         _ => {}
@@ -352,11 +353,12 @@ impl BlockadeHandler {
             .get(format!("{}/blockade", self.host).as_str())
             .send()?;
 
-        println!("Sent get to server with status: {}", res.status());
+        debug!("Sent get to server with status: {}", res.status());
 
         if res.status().is_success() {
-            info!("Raw response from server: {:#?}", res.text()?);
-            let v: Vec<String> = serde_json::from_str(&res.text()?)?;
+            let raw_text = res.text()?;
+            info!("Raw response from server: {:#?}", &raw_text);
+            let v: Vec<String> = serde_json::from_str(&raw_text)?;
             self.blockades = v;
             return Ok(());
         } else {
@@ -369,11 +371,12 @@ impl BlockadeHandler {
             .get(format!("{}/blockade/{}", self.host, name).as_str())
             .send()?;
 
-        println!("Sent get to server with status: {}", res.status());
+        debug!("Sent get to server with status: {}", res.status());
 
         if res.status().is_success() {
-            info!("Raw response from server: {:#?}", res.text()?);
-            let s: BlockadeState = serde_json::from_str(&res.text()?)?;
+            let raw_text = res.text()?;
+            info!("Raw response from server: {:#?}", &raw_text);
+            let s: BlockadeState = serde_json::from_str(&raw_text)?;
             self.state.insert(name.into(), s);
             return Ok(());
         } else {

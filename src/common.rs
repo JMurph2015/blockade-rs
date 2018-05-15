@@ -159,19 +159,29 @@ fn ip_default_resource() -> Ipv4Addr {
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeContainerState {
+    // present
     pub container_id: String,
+
+    // not present always
     #[serde(default = "none_str_resource")]
     pub device: Option<String>,
+
+    // sometimes null, but is present
     #[serde(default = "ip_default_resource")]
     pub ip_address: Ipv4Addr,
+
+    // present
     pub name: String,
 
+    // present
     #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub network_state: BlockadeNetStatus,
 
+    // present, sometimes null
     #[serde(default = "none_u32_resource")]
     pub partition: Option<u32>,
 
+    // present
     #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub status: BlockadeContainerStatus,
 }
