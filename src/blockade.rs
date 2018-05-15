@@ -114,8 +114,24 @@ impl BlockadeHandler {
         &mut self,
         name: &str,
         config: BlockadeConfig,
+        restart: bool,
     ) -> Result<(), BlockadeError> {
-        self.execute_setup(name, config)?;
+        match self.execute_setup(name, config.clone()) {
+            Ok(_) => {},
+            Err(e) => {
+                if restart {
+                    match e {
+                        BlockadeError::ServerError(s) => {
+                            if s == String::from("Blockade name already exists") {
+                                self.destroy_blockade(name)?;
+                                self.execute_setup(name, config.clone())?;
+                            }
+                        },
+                        _ => {}
+                    }
+                }
+            }
+        };
         self.execute_get_blockade(name)?;
         return Ok(());
     }
