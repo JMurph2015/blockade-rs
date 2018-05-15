@@ -14,6 +14,7 @@ pub enum BlockadeError {
     HttpError(reqwest::Error),
     ServerError(String),
     OtherError(String),
+    JsonError(serde_json::Error),
 }
 
 impl fmt::Display for BlockadeError {
@@ -22,6 +23,7 @@ impl fmt::Display for BlockadeError {
             BlockadeError::HttpError(ref n) => write!(f, "HTTP error: {:?}", n),
             BlockadeError::OtherError(ref n) => write!(f, "Other error: {:?}", n),
             BlockadeError::ServerError(ref n) => write!(f, "Server error: {:?}", n),
+            BlockadeError::JsonError(ref n) => write!(f, "JSON parsing error: {:?}", n),
         }
     }
 }
@@ -29,6 +31,12 @@ impl fmt::Display for BlockadeError {
 impl From<reqwest::Error> for BlockadeError {
     fn from(error: reqwest::Error) -> BlockadeError {
         return BlockadeError::HttpError(error);
+    }
+}
+
+impl From<serde_json::Error> for BlockadeError {
+    fn from(error: serde_json::Error) -> BlockadeError {
+        return BlockadeError::JsonError(error);
     }
 }
 
@@ -349,7 +357,7 @@ impl BlockadeHandler {
 
         if res.status().is_success() {
             info!("Raw response from server: {:?}", res.text()?);
-            let v: Vec<String> = res.json()?;
+            let v: Vec<String> = serde_json::from_str(&res.text()?)?;
             self.blockades = v;
             return Ok(());
         } else {
@@ -366,7 +374,7 @@ impl BlockadeHandler {
 
         if res.status().is_success() {
             info!("Raw response from server: {:?}", res.text()?);
-            let s: BlockadeState = res.json()?;
+            let s: BlockadeState = serde_json::from_str(&res.text()?)?;
             self.state.insert(name.into(), s);
             return Ok(());
         } else {

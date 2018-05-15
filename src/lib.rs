@@ -9,6 +9,7 @@ extern crate serde_json;
 
 mod blockade;
 mod common;
+pub use blockade::BlockadeError as Error;
 pub use blockade::*;
 pub use common::*;
 #[cfg(test)]
