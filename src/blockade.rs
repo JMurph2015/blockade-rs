@@ -358,8 +358,11 @@ impl BlockadeHandler {
         if res.status().is_success() {
             let raw_text = res.text()?;
             info!("Raw response from server: {:#?}", &raw_text);
-            let v: Vec<String> = serde_json::from_str(&raw_text)?;
-            self.blockades = v;
+            let v: HashMap<String, Vec<String>> = serde_json::from_str(&raw_text)?;
+            self.blockades = match v.get("blockades") {
+                Some(n) => (n.clone()).into(),
+                None => Vec::new(),
+            };
             return Ok(());
         } else {
             return Err(BlockadeError::ServerError(res.text()?));
