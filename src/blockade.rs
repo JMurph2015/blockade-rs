@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use std::{error, fmt};
 
-use log;
-
 use serde_json;
 
 use reqwest;
