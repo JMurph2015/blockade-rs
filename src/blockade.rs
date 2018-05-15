@@ -3,9 +3,8 @@ use std::{error, fmt};
 
 use serde_json;
 
-use reqwest;
-
 use rand::{seq, thread_rng};
+use reqwest;
 
 use common::*;
 
@@ -356,7 +355,7 @@ impl BlockadeHandler {
         println!("Sent get to server with status: {}", res.status());
 
         if res.status().is_success() {
-            info!("Raw response from server: {:?}", res.text()?);
+            info!("Raw response from server: {:#?}", res.text()?);
             let v: Vec<String> = serde_json::from_str(&res.text()?)?;
             self.blockades = v;
             return Ok(());
@@ -373,7 +372,7 @@ impl BlockadeHandler {
         println!("Sent get to server with status: {}", res.status());
 
         if res.status().is_success() {
-            info!("Raw response from server: {:?}", res.text()?);
+            info!("Raw response from server: {:#?}", res.text()?);
             let s: BlockadeState = serde_json::from_str(&res.text()?)?;
             self.state.insert(name.into(), s);
             return Ok(());

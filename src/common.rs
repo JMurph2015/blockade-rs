@@ -1,17 +1,15 @@
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 
-use std::fmt;
-
-use serde::de::Visitor;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Serialize, Serializer};
+use serde_aux::prelude::*;
 
 pub trait Stringify {
     fn to_str(&self) -> &str;
     fn from_str(val: &str) -> Self;
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub enum BlockadeCommand {
     Start,
     Stop,
@@ -40,9 +38,7 @@ impl Stringify for BlockadeCommand {
     }
 }
 
-// There's a good reason not to derive Serialize here
-// see below implementation for details.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub enum BlockadeNetStatus {
     Fast,
     Slow,
@@ -75,7 +71,7 @@ impl Stringify for BlockadeNetStatus {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Deserialize, PartialEq)]
 pub enum BlockadeContainerStatus {
     Up,
     Down,
@@ -109,6 +105,7 @@ pub struct BlockadeContainer {
     pub expose: Vec<u16>,
     pub ports: HashMap<u16, u16>,
     pub links: HashMap<String, String>,
+    pub command: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -126,12 +123,14 @@ pub struct BlockadeConfig {
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeCommandArgs {
+    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub command: BlockadeCommand,
     pub container_names: Vec<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct BlockadeNetArgs {
+    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub network_state: BlockadeNetStatus,
     pub container_names: Vec<String>,
 }
@@ -149,9 +148,11 @@ pub struct BlockadeState {
 fn none_str_resource() -> Option<String> {
     return None;
 }
+
 fn none_u32_resource() -> Option<u32> {
     return None;
 }
+
 fn ip_default_resource() -> Ipv4Addr {
     return Ipv4Addr::new(0, 0, 0, 0);
 }
@@ -164,9 +165,14 @@ pub struct BlockadeContainerState {
     #[serde(default = "ip_default_resource")]
     pub ip_address: Ipv4Addr,
     pub name: String,
+
+    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub network_state: BlockadeNetStatus,
+
     #[serde(default = "none_u32_resource")]
     pub partition: Option<u32>,
+
+    #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub status: BlockadeContainerStatus,
 }
 
@@ -179,6 +185,7 @@ impl Default for BlockadeContainer {
             expose: Vec::new(),
             ports: HashMap::new(),
             links: HashMap::new(),
+            command: None,
         };
     }
 }
@@ -250,110 +257,19 @@ impl Default for BlockadeContainerState {
     }
 }
 
-impl Serialize for BlockadeCommand {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.to_str())
-    }
+macro_rules! serialize_impl {
+    ($($t:ty)*) => ($(
+        impl Serialize for $t {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer
+            {
+                serializer.serialize_str(self.to_str())
+            }
+        }
+    )*)
 }
 
-struct BlockadeCommandVisitor;
-
-impl<'de> Visitor<'de> for BlockadeCommandVisitor {
-    type Value = BlockadeCommand;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("A string of valid form for the enums")
-    }
-
-    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
-        Ok(Stringify::from_str(value))
-    }
-
-    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
-        Ok(Stringify::from_str(value.as_str()))
-    }
-}
-
-impl<'de> Deserialize<'de> for BlockadeCommand {
-    fn deserialize<D>(deserializer: D) -> Result<BlockadeCommand, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_str(BlockadeCommandVisitor)
-    }
-}
-
-impl Serialize for BlockadeNetStatus {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.to_str())
-    }
-}
-
-struct BlockadeNetStatusVisitor;
-
-impl<'de> Visitor<'de> for BlockadeNetStatusVisitor {
-    type Value = BlockadeNetStatus;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("A string of valid form for the enums")
-    }
-
-    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
-        Ok(Stringify::from_str(value))
-    }
-
-    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
-        Ok(Stringify::from_str(value.as_str()))
-    }
-}
-
-impl<'de> Deserialize<'de> for BlockadeNetStatus {
-    fn deserialize<D>(deserializer: D) -> Result<BlockadeNetStatus, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_str(BlockadeNetStatusVisitor)
-    }
-}
-
-impl Serialize for BlockadeContainerStatus {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(self.to_str())
-    }
-}
-
-struct BlockadeContainerStatusVisitor;
-
-impl<'de> Visitor<'de> for BlockadeContainerStatusVisitor {
-    type Value = BlockadeContainerStatus;
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("A string of valid form for the enums")
-    }
-
-    fn visit_str<E>(self, value: &str) -> Result<Self::Value, E> {
-        Ok(Stringify::from_str(value))
-    }
-
-    fn visit_string<E>(self, value: String) -> Result<Self::Value, E> {
-        Ok(Stringify::from_str(value.as_str()))
-    }
-}
-
-impl<'de> Deserialize<'de> for BlockadeContainerStatus {
-    fn deserialize<D>(deserializer: D) -> Result<BlockadeContainerStatus, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_str(BlockadeContainerStatusVisitor)
-    }
-}
+serialize_impl!(BlockadeCommand);
+serialize_impl!(BlockadeNetStatus);
+serialize_impl!(BlockadeContainerStatus);

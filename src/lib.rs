@@ -3,6 +3,7 @@ extern crate log;
 extern crate rand;
 extern crate reqwest;
 extern crate serde;
+extern crate serde_aux;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
