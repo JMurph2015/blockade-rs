@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_aux::prelude::*;
 
 pub trait Stringify {
@@ -145,12 +145,12 @@ pub struct BlockadeState {
     pub containers: HashMap<String, BlockadeContainerState>,
 }
 
-fn none_str_resource() -> Option<String> {
-    return None;
+fn none_str_resource() -> String {
+    return "".into();
 }
 
-fn none_u32_resource() -> Option<u32> {
-    return None;
+fn none_u32_resource() -> u32 {
+    return 99;
 }
 
 fn ip_default_resource() -> Ipv4Addr {
@@ -164,10 +164,10 @@ pub struct BlockadeContainerState {
 
     // not present always
     #[serde(default = "none_str_resource")]
-    pub device: Option<String>,
+    pub device: String,
 
     // sometimes null, but is present
-    #[serde(default = "ip_default_resource")]
+    #[serde(default = "ip_default_resource", deserialize_with = "nullable_ip")]
     pub ip_address: Ipv4Addr,
 
     // present
@@ -178,12 +178,26 @@ pub struct BlockadeContainerState {
     pub network_state: BlockadeNetStatus,
 
     // present, sometimes null
-    #[serde(default = "none_u32_resource")]
-    pub partition: Option<u32>,
+    #[serde(default = "none_u32_resource", deserialize_with = "nullable_u32")]
+    pub partition: u32,
 
     // present
     #[serde(deserialize_with = "deserialize_struct_case_insensitive")]
     pub status: BlockadeContainerStatus,
+}
+
+fn nullable_u32<'de, D>(deserializer: D) -> Result<u32, D::Error>
+where D: Deserializer<'de>
+{
+    let opt = Option::deserialize(deserializer)?;
+    Ok(opt.unwrap_or(99))
+}
+
+fn nullable_ip<'de, D>(deserializer: D) -> Result<Ipv4Addr, D::Error>
+where D: Deserializer<'de>
+{
+    let opt = Option::deserialize(deserializer)?;
+    Ok(opt.unwrap_or(Ipv4Addr::new(0,0,0,0)))
 }
 
 impl Default for BlockadeContainer {
@@ -257,11 +271,11 @@ impl Default for BlockadeContainerState {
     fn default() -> Self {
         return BlockadeContainerState {
             container_id: String::new(),
-            device: None,
+            device: "".into(),
             ip_address: Ipv4Addr::new(127, 0, 0, 2),
             name: String::new(),
             network_state: BlockadeNetStatus::Unknown,
-            partition: Some(0),
+            partition: 0,
             status: BlockadeContainerStatus::Missing,
         };
     }
