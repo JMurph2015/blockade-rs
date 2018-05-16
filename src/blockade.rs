@@ -84,9 +84,10 @@ impl BlockadeHandler {
         return handler;
     }
 
+    /// Returns all container names in default String order (lexicographical).
     pub fn get_all_containers(&mut self, name: &str) -> Result<Vec<String>, BlockadeError> {
         self.execute_get_blockade(name)?;
-        let all_containers: Vec<String> = if self.state.contains_key(name) {
+        let mut all_containers: Vec<String> = if self.state.contains_key(name) {
             self.state[name]
                 .containers
                 .keys()
@@ -95,6 +96,7 @@ impl BlockadeHandler {
         } else {
             Vec::new()
         };
+        all_containers.sort();
         return Ok(all_containers);
     }
 
