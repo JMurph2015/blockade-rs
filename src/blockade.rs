@@ -247,14 +247,14 @@ impl BlockadeHandler {
         self.config.insert(name.into(), config.clone());
 
         let json = serde_json::to_string_pretty(&config).expect("Failed to serialize config");
-        println!("Config: {}", json);
+        trace!("Config: {}", json);
 
         let mut res = self.client
             .post(format!("{}/blockade/{}", self.host, name).as_str())
             .json(&config)
             .send()?;
 
-        println!("Posted to server with status: {}", res.status());
+        debug!("Posted to server with status: {}", res.status());
 
         if res.status().is_success() {
             return Ok(());
@@ -279,7 +279,7 @@ impl BlockadeHandler {
             .json(&args)
             .send()?;
 
-        println!("Posted to server with status: {}", res.status());
+        debug!("Posted to server with status: {}", res.status());
 
         if res.status().is_success() {
             return Ok(());
@@ -304,7 +304,7 @@ impl BlockadeHandler {
             .json(&args)
             .send()?;
 
-        println!("Posted to server with status: {}", res.status());
+        debug!("Posted to server with status: {}", res.status());
 
         if res.status().is_success() {
             return Ok(());
@@ -325,7 +325,7 @@ impl BlockadeHandler {
             .json(&args)
             .send()?;
 
-        println!("Posted to server with status: {}", res.status());
+        debug!("Posted to server with status: {}", res.status());
 
         if res.status().is_success() {
             return Ok(());
@@ -339,7 +339,7 @@ impl BlockadeHandler {
             .delete(format!("{}/blockade/{}/partitions", self.host, name).as_str())
             .send()?;
 
-        println!("Sent delete to server with status: {}", res.status());
+        debug!("Sent delete to server with status: {}", res.status());
 
         if res.status().is_success() {
             return Ok(());
@@ -357,7 +357,7 @@ impl BlockadeHandler {
 
         if res.status().is_success() {
             let raw_text = res.text()?;
-            info!("Raw response from server: {:#?}", &raw_text);
+            debug!("Raw response from server: {:#?}", &raw_text);
             let v: HashMap<String, Vec<String>> = serde_json::from_str(&raw_text)?;
             self.blockades = match v.get("blockades") {
                 Some(n) => (n.clone()).into(),
@@ -378,7 +378,7 @@ impl BlockadeHandler {
 
         if res.status().is_success() {
             let raw_text = res.text()?;
-            info!("Raw response from server: {:#?}", &raw_text);
+            debug!("Raw response from server: {:#?}", &raw_text);
             let s: BlockadeState = serde_json::from_str(&raw_text)?;
             self.state.insert(name.into(), s);
             return Ok(());
@@ -392,7 +392,7 @@ impl BlockadeHandler {
             .delete(format!("{}/blockade/{}", self.host, name).as_str())
             .send()?;
 
-        println!("Sent delete to server with status: {}", res.status());
+        debug!("Sent delete to server with status: {}", res.status());
 
         if res.status().is_success() {
             if self.state.contains_key(name) {
