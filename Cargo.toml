@@ -1,6 +1,6 @@
 [package]
 name = "blockade"
-version = "0.1.9"
+version = "0.1.10"
 authors = ["Joseph Murphy <air.jmurph@gmail.com>"]
 license = "MIT"
 description = "A wrapper library to interface with the Blockade project"
